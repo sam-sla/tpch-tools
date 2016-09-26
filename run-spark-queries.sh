@@ -1,24 +1,40 @@
 #!/bin/bash
 source_folder=$1
-exclude_pattern=$2
+DB=$2
+inclusivity=$3 # inc[lude] or exc[lude]
+match_pattern=$4
 
-DB="use tpch_flat_orc_100;"
+echo "Source folder = $source_folder"
 
-echo "source folder = $source_folder"
+# Make sure output dir exists
+output_dir="$source_folder/output-$DB"
+mkdir -p $output_dir
 
-for query in $source_folder/tpch_query*.sql
+run_query () {
+    echo -e "use $DB;\n$(cat $query_file)" > "$output_dir/spark-$query_name"
+    spark-sql -i $source_folder/testbench.settings -f "$output_dir/spark-$query_name" > "$output_dir/out-${query_name%.*}" 2>&1
+}
+
+for query_file in $source_folder/tpch_query*.sql
 do
-    query_name=$(basename "$query")
-    echo "Query name is $query_name"
-#    echo "Exclude pattern is: $exclude_pattern"
+    query_name=$(basename "$query_file")
+    echo -n "  Handling query file: $query_name -> "
 
-#    if ! [[ $query_name =~ $exclude_pattern ]] ; then # Excluding files
-    if [[ $query_name =~ $exclude_pattern ]] ; then   # Including files
-      #echo "BASH_REMATCH = $BASH_REMATCH"
-#      echo "Will process query $query_name"
-      echo -e "$DB\n$(cat $query)" > spark-$query_name
-      spark-sql -i testbench.settings -f spark-$query_name > $source_folder/sparkOutput/out-${query_name%.*} 2>&1
+    if [[ $inclusivity =~ "inc" ]] ; then
+        if [[ $query_name =~ $match_pattern ]] ; then   # Including files
+            echo -n "Executing... "
+            run_query
+            echo "Done!"
+        else
+            echo "Skipped."
+        fi
     else
-      echo "Skipping query $query"
+         if ! [[ $query_name =~ $match_pattern ]] ; then   # Excluding files
+            echo -n "Executing... "
+            run_query
+            echo "Done!"
+        else
+            echo "Skipped."
+        fi
     fi
 done
