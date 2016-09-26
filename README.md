@@ -16,3 +16,6 @@ Small scripts created to help with the TPC-H benchmarking
 #### Examples
 * `$ ./run-spark-queries.sh /mnt/hive-testbench/sample-queries-tpch/ tpch_flat_parquet_1000 include "(query6|query14)"`
 * `$ ./run-spark-queries.sh /mnt/hive-testbench/sample-queries-tpch/ tpch_flat_orc_100 exclude "(query1\.|query11)"`
+
+## Credits
+These scripts were written in complement to https://github.com/hortonworks/hive-testbench
