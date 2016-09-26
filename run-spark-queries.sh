@@ -6,21 +6,24 @@ match_pattern=$4
 
 echo "Source folder = $source_folder"
 
+# Make sure output dir exists
+output_dir="$source_folder/output-$DB"
+mkdir -p $output_dir
+
 run_query () {
-    query=$1
-    echo -e "use $DB;\n$(cat $query)" > spark-$query_name
-    spark-sql -i $source_folder/testbench.settings -f spark-$query_name > $source_folder/$DB/out-${query_name%.*} 2>&1
+    echo -e "use $DB;\n$(cat $query_file)" > "$output_dir/spark-$query_name"
+    spark-sql -i $source_folder/testbench.settings -f "$output_dir/spark-$query_name" > "$output_dir/out-${query_name%.*}" 2>&1
 }
 
-for query in $source_folder/tpch_query*.sql
+for query_file in $source_folder/tpch_query*.sql
 do
-    query_name=$(basename "$query")
-    echo -n "  Handling query: $query_name -> "
+    query_name=$(basename "$query_file")
+    echo -n "  Handling query file: $query_name -> "
 
     if [[ $inclusivity =~ "inc" ]] ; then
         if [[ $query_name =~ $match_pattern ]] ; then   # Including files
             echo -n "Executing... "
-            run_query $query
+            run_query
             echo "Done!"
         else
             echo "Skipped."
@@ -28,7 +31,7 @@ do
     else
          if ! [[ $query_name =~ $match_pattern ]] ; then   # Excluding files
             echo -n "Executing... "
-            run_query $query
+            run_query
             echo "Done!"
         else
             echo "Skipped."
