@@ -4,16 +4,12 @@ DB=$2
 inclusivity=$3 # inc[lude] or exc[lude]
 match_pattern=$4
 
-# DB="use tpch_flat_orc_100;"
-# DB="use tpch_flat_parquet_100;"
-use_DB="use $DB;"
-
 echo "Source folder = $source_folder"
 
 run_query () {
     query=$1
-    echo -e "$DB\n$(cat $query)" > spark-$query_name
-#    spark-sql -i $source_folder/testbench.settings -f spark-$query_name > $source_folder/sparkOutput-parquet/out-${query_name%.*} 2>&1
+    echo -e "use $DB;\n$(cat $query)" > spark-$query_name
+    spark-sql -i $source_folder/testbench.settings -f spark-$query_name > $source_folder/$DB/out-${query_name%.*} 2>&1
 }
 
 for query in $source_folder/tpch_query*.sql
